@@ -1,7 +1,4 @@
-import { group } from "console";
 import mongoose from "mongoose";
-import { type } from "os";
-import { use } from "react";
 
 const participantSchema = new mongoose.Schema({
     userId: {
