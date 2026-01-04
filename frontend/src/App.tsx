@@ -4,8 +4,16 @@ import SignUpPage from "./pages/signUpPage";
 import ChatAppPage from "./pages/ChatAppPage";
 import { Toaster } from "sonner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { useThemeStore } from "./store/useThemeStore";
+import { useEffect } from "react";
 
 function App() {
+  const { isDark, setTheme } = useThemeStore();
+
+  useEffect(() => {
+    setTheme(isDark);
+  }, [isDark]);
+
   return (
     <>
       <Toaster />

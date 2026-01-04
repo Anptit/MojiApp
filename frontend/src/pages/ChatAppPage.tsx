@@ -1,15 +1,18 @@
-import Logout from "@/components/auth/Logout";
-import { useAuthStore } from "@/store/useAuthStore";
-import React from "react";
+import React from 'react';
+import { AppSidebar } from '@/components/sidebar/app-sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import ChatWindowLayout from '@/components/chat/ChatWindowLayout';
 
 const ChatAppPage: React.FC = () => {
-  const { user } = useAuthStore();
   return (
-    <div>
-      <h1>Welcome to the Chat App, {user?.displayName || user?.username}!</h1> 
-      <Logout />
-    </div>
-  );
+    <SidebarProvider>
+      <AppSidebar />
+
+      <div className="flex h-screen w-full p-2">
+        <ChatWindowLayout />
+      </div>
+    </SidebarProvider>
+  )
 };
 
 export default ChatAppPage;
