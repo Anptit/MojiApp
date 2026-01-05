@@ -6,16 +6,15 @@ const pair = (a,b) => (a < b) ? [a,b] : [b,a];
 export const checkFriendship = async (req, res, next) => {
     try {
         const me = req.user._id;
-        const recipentId = req.body?.recipentId ?? null;
+        const recipientId = req.body?.recipientId ?? null;
         const memberIds = req.body?.memberIds ?? null;
 
-        if (!recipentId && memberIds.length === 0) {
-            return res.status(400).json({ message: "RecipentId is required." });
+        if (!recipientId && memberIds.length === 0) {
+            return res.status(400).json({ message: "RecipientId is required." });
         }
 
-        if (recipentId) {
-            const [userA, userB] = pair(me, recipentId);
-
+        if (recipientId) {
+            const [userA, userB] = pair(me, recipientId);
             const isFriend = await Friend.findOne({userA, userB});
 
             if (!isFriend) {

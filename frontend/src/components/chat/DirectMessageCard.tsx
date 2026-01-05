@@ -6,10 +6,12 @@ import { useChatStore } from "@/store/useChatStore";
 import UserAvatar from "./UserAvatar";
 import StatusBadge from "./StatusBadge";
 import UnreadCountBadge from "./UnreadCountBadge";
+import { useSocketStore } from "@/store/useSocketStore";
 
 const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
     const { user } = useAuthStore();
     const { activeConversationId, setActiveConversation, messages, fetchMessages } = useChatStore();
+    const { onlineUsers } = useSocketStore();
 
     if (!user) return null;
 
@@ -40,7 +42,7 @@ const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
                     avatarUrl={otherUser.avatarUrl ?? undefined} 
                 />
 
-                <StatusBadge status="offline"/>
+                <StatusBadge status={onlineUsers.includes(otherUser?._id || "") ? "online" : "offline"}/>
                 {
                     unreadCount > 0 && <UnreadCountBadge unreadCount={unreadCount} />
                 }

@@ -1,10 +1,11 @@
-import { updateConversationAfterCreateMessage } from "../utils/messageHepper.js";
+import { emitNewMessage, updateConversationAfterCreateMessage } from "../utils/messageHepper.js";
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
+import { io } from "../socket/index.js";
 
 export const sendDirectMessage = async (req, res) => {
     try {
-        const { recipentId, content, conversationId } = req.body;
+        const { recipientId, content, conversationId } = req.body;
         const senderId = req.user._id;
 
         let conversation;
@@ -22,7 +23,7 @@ export const sendDirectMessage = async (req, res) => {
                 type: 'direct',
                 participants: [
                     { userId: senderId, joinedAt: new Date() },
-                    { userId: recipentId, joinedAt: new Date() }
+                    { userId: recipientId, joinedAt: new Date() }
                 ],
                 lastMessageAt: new Date(),
                 unreadCounts: new Map()
@@ -37,6 +38,8 @@ export const sendDirectMessage = async (req, res) => {
 
         updateConversationAfterCreateMessage(conversation, message, senderId);
         await conversation.save();
+
+        emitNewMessage(io, conversation, message);
 
         return res.status(200).json({ message: 'Direct message sent successfully.', conversation });
     } catch (error) {
@@ -64,6 +67,7 @@ export const sendGroupMessage = async (req, res) => {
         updateConversationAfterCreateMessage(conversation, message, senderId);
 
         await conversation.save();
+        emitNewMessage(io, conversation, message);
 
         return res.status(201).json({ message: 'Group message sent successfully.', conversation });
     } catch (error) {

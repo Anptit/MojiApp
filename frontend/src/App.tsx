@@ -6,13 +6,25 @@ import { Toaster } from "sonner";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { useThemeStore } from "./store/useThemeStore";
 import { useEffect } from "react";
+import { useAuthStore } from "./store/useAuthStore";
+import { useSocketStore } from "./store/useSocketStore";
 
 function App() {
   const { isDark, setTheme } = useThemeStore();
+  const { accessToken } = useAuthStore();
+  const { connectSocket, disconnectSocket } = useSocketStore();
 
   useEffect(() => {
     setTheme(isDark);
   }, [isDark]);
+
+  useEffect(() => {
+    if (accessToken) {
+      connectSocket();
+    }
+
+    return () => disconnectSocket();
+  }, [accessToken]);
 
   return (
     <>
