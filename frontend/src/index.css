@@ -280,6 +280,14 @@
     box-shadow: var(--shadow-bubble);
   }
 
+  .error-message {
+    @apply text-sm text-destructive;
+  }
+
+  .success-message {
+    @apply text-sm text-emerald-500;
+  }
+
   /* scrollbar */
   .beautiful-scrollbar {
     @apply scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent

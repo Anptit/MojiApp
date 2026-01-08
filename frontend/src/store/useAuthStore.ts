@@ -16,9 +16,12 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
     clearState: () => {
         set({ accessToken: null, user: null, loading: false });
-        localStorage.clear();
         useChatStore.getState().reset();
+        localStorage.clear();
+        sessionStorage.clear();
     },
+
+    setUser: (user) => { set({ user }); },
 
     signUp: async (username, password, email, firstName, lastName) => {
         try {
@@ -37,8 +40,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         try {
             set({ loading: true });
 
-            localStorage.clear();
-            useChatStore.getState().reset();
+           get().clearState();
 
             const { accessToken } = await authService.signIn(username, password);
             get().setAccessToken(accessToken);

@@ -1,6 +1,7 @@
 import { join } from "path";
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
+import { io } from "../socket/index.js";
 
 export const createConversation = async (req, res) => {
     try {
@@ -52,8 +53,23 @@ export const createConversation = async (req, res) => {
             { path: 'seenBy', select: '_id displayName avatarUrl' },
             { path: 'lastMessage.senderId', select: '_id displayName avatarUrl' }
         ]);
+
+        const participants = (conversation.participants || []).map(p => ({
+            _id: p.userId?._id,
+            displayName: p.userId?.displayName,
+            avatarUrl: p.userId?.avatarUrl ?? null,
+            joinedAt: p.joinedAt
+        }));
+
+        const formatted = {...conversation.toObject(), participants };
+
+        if (type === 'group') {
+            memberIds.forEach(userId => {
+                io.to(userId).emit("new-group", formatted);
+            })
+        }
              
-        return res.status(201).json({ message: "Conversation created successfully.", conversation });
+        return res.status(201).json({ message: "Conversation created successfully.", conversation: formatted });
     } catch (error) {
         console.error('Error creating conversation:', error);
         return res.status(500).json({ message: 'Internal server error' });
@@ -140,5 +156,56 @@ export const getUserConversationsForSocketIO = async (userId) => {
     } catch (error) {
         console.error('Error fetching user conversations for Socket.IO:', error);
         return [];
+    }
+}
+
+export const markAsSeen = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const userId = req.user._id.toString();
+        const conversation = await Conversation.findById(conversationId).lean();
+
+        if (!conversation) {
+            return res.status(404).json({ message: 'Conversation not found' });
+        }
+
+        const last = conversation.lastMessage;
+
+        if (!last) {
+            return res.status(200).json({ message: 'No messages to mark as seen' });
+        }
+
+        if (last.senderId.toString() === userId) {
+            return res.status(200).json({ message: 'Cannot mark own message as seen' });
+        }
+
+        const updated = await Conversation.findByIdAndUpdate(
+            conversationId,
+            {
+                $addToSet: { seenBy: userId },
+                $set: { [`unreadCounts.${userId}`]: 0}
+            }, {
+                new: true
+            }
+        );
+
+        io.to(conversationId).emit("read-message", {
+            conversation: updated,
+            lastMessage: updated?.lastMessage.content,
+            createdAt: updated?.lastMessage.createdAt,
+            sender: {
+                _id: updated?.lastMessage.senderId
+            }
+        })
+
+        return res.status(200).json({ 
+            message: 'Conversation marked as seen', 
+            seenBy: updated?.seenBy || [], 
+            unreadCounts: updated?.unreadCounts?.[userId] || {} 
+        });
+
+    } catch (error) {
+        console.error('Error marking conversation as seen:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 }
